@@ -1,6 +1,7 @@
 import { shallowRef, ref, type EmitsOptions } from 'vue'
 import { type Component, type Ref, type DefineComponent } from 'vue'
 import { type ComponentList, type ComponentRegistry, type MaybeComponent, type PluginOptions } from "./types"
+import { Context } from '.'
 
 export default class VueExcel extends EventTarget {
   components: Ref<ComponentRegistry>
@@ -12,6 +13,7 @@ export default class VueExcel extends EventTarget {
   activeWorksheet: Ref<Excel.Worksheet | null>
   worksheets: Ref<Excel.WorksheetCollection | null>
   workbookEmits: EmitsOptions
+  context!: Context
 
   constructor(options: PluginOptions) {
     super()
@@ -49,6 +51,7 @@ export default class VueExcel extends EventTarget {
   }
   
   async initialize(components: Record<string, MaybeComponent>, ctx: Excel.RequestContext) {
+    this.context = new Context(ctx)
     const workbook = ctx.workbook.load()
     const activeWorksheet = ctx.workbook.worksheets.getActiveWorksheet().load()
     const workbookNames = ctx.workbook.names.load(['name', 'value'])

@@ -1,14 +1,35 @@
 export default class Context {
-  static with(ctx: Excel.RequestContext) {
+  context: Excel.RequestContext
+  constructor(context: Excel.RequestContext) {
+    this.context = context
+  }
+
+  with(ctx: Excel.RequestContext) {
     return {
       sync: this.sync.bind(this, ctx),
       perform: this.perform.bind(this, ctx)
     }
   }
 
-  static async sync<T>(context: Excel.RequestContext, callback: (ctx: Excel.RequestContext) => Promise<T>): Promise<T>
-  static async sync<T>(callback: (ctx: Excel.RequestContext) => Promise<T>): Promise<T>
-  static async sync<T>(callback_or_context, callback?): Promise<T> {
+  addTrackedObject(object: OfficeExtension.ClientObject) {
+    this.context.trackedObjects.add(object)
+  }
+
+  removeTrackedObject(object: OfficeExtension.ClientObject) {
+    this.context.trackedObjects.remove(object)
+  }
+
+  async run<T>(callback): Promise<T> {
+    return Excel.run(this.context, callback)
+  }
+
+  async doSync() {
+    return this.context.sync()
+  }
+  
+  async sync<T>(context: Excel.RequestContext, callback: (ctx: Excel.RequestContext) => Promise<T>): Promise<T>
+  async sync<T>(callback: (ctx: Excel.RequestContext) => Promise<T>): Promise<T>
+  async sync<T>(callback_or_context, callback?): Promise<T> {
     callback = callback_or_context instanceof Excel.RequestContext ? callback : callback_or_context
 
     const batch = async (ctx: Excel.RequestContext) => {
@@ -39,13 +60,13 @@ export default class Context {
     if (callback_or_context instanceof Excel.RequestContext) {
       return Excel.run(callback_or_context, batch);
     } else {
-      return Excel.run(batch);
+      return this.run(batch);
     }
   }
 
-  static async perform(context: Excel.RequestContext, callback: (ctx: Excel.RequestContext) => Promise<any>): Promise<any>
-  static async perform(callback: (ctx: Excel.RequestContext) => Promise<any>): Promise<any>
-  static async perform(callback_or_context, callback?): Promise<any> {
+  async perform(context: Excel.RequestContext, callback: (ctx: Excel.RequestContext) => Promise<any>): Promise<any>
+  async perform(callback: (ctx: Excel.RequestContext) => Promise<any>): Promise<any>
+  async perform(callback_or_context, callback?): Promise<any> {
     callback = callback_or_context instanceof Excel.RequestContext ? callback : callback_or_context
 
     const batch = async (ctx: Excel.RequestContext) => {
@@ -57,7 +78,7 @@ export default class Context {
     if (callback_or_context instanceof Excel.RequestContext) {
       return await Excel.run(callback_or_context, batch);
     } else {
-      return await Excel.run(batch);
+      return await this.run(batch);
     }
   }
 }

@@ -5,8 +5,10 @@ import Context from './Context'
 import createWorkbookComponent from './components/Workbook.vue'
 import Worksheet from './components/Worksheet.vue'
 import Range from './components/Range.vue'
+import Table, { type TableChangedEvent } from './components/Table.vue'
 
-export { VueExcel, Context }
+export { VueExcel, Context, Worksheet, Range, Table }
+export type { TableChangedEvent }
 
 export function connectExcel() {
   return {
@@ -19,9 +21,11 @@ export function connectExcel() {
     },
 
     installComponents(app: App, options: PluginOptions): void {
-      app.component('Workbook', createWorkbookComponent(options.workbookEmits))
-        .component('Worksheet', Worksheet)
-        .component('Range', Range)
+      const prefix = options.prefix || ""
+      app.component(`${prefix}Workbook`, createWorkbookComponent(options.workbookEmits))
+        .component(`${prefix}Worksheet`, Worksheet)
+        .component(`${prefix}Range`, Range)
+        .component(`${prefix}Table`, Table)
     },
 
     installExcel(app: App, excel: VueExcel): void {

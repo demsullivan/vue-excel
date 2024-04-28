@@ -7,6 +7,7 @@ export type ComponentRegistry = Record<string, { component: MaybeComponent, prop
 export type ComponentList = Component[] | ComponentRegistry
 
 export type PluginOptions = {
-  components: ComponentList,
+  components?: ComponentList,
+  prefix?: string,
   workbookEmits?: EmitsOptions
 }

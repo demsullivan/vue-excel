@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { onMounted, inject, ref, type Ref, watch, type EmitsOptions, computed } from 'vue'
+import { onMounted, inject, ref, type Ref, watch, type EmitsOptions, computed, shallowRef, provide } from 'vue'
 import VueExcel from '../VueExcel'
 
 // REFS AND PROPS
 const vueExcel: VueExcel = inject('vueExcel') as VueExcel
-const worksheet = ref<Excel.Worksheet>()
+const worksheet = shallowRef<Excel.Worksheet>()
+
+provide('vueExcel.scope.worksheet', worksheet)
 
 type Props = {
   name: string
@@ -44,8 +46,9 @@ function setupEventListeners() {
 }
 
 onMounted(async() => {
-  return await vueExcel.excel.run(async (ctx: Excel.RequestContext) => {
+  return await vueExcel.context.run(async (ctx: Excel.RequestContext) => {
     const excelWorksheet = ctx.workbook.worksheets.getItem(props.name).load()
+    ctx.trackedObjects.add(excelWorksheet)
     await ctx.sync()
     worksheet.value = excelWorksheet
     setupEventListeners()
