@@ -7,6 +7,7 @@ const vueExcel: VueExcel = inject('vueExcel') as VueExcel
 const worksheet = shallowRef<Excel.Worksheet>()
 
 provide('vueExcel.scope.worksheet', worksheet)
+defineExpose({ worksheet });
 
 type Props = {
   name: string
@@ -16,14 +17,16 @@ const props = defineProps<Props>()
 
 // EMITS AND EVENTS
 type Emits = {
-  changed: [event: any]
+  changed: [event: any],
+  selectionChanged: [event: any]
 }
 
-type WorksheetEvent = "onChanged"
-type WorksheetEventArgs = Excel.WorksheetChangedEventArgs
+type WorksheetEvent = "onChanged" | "onSelectionChanged"
+type WorksheetEventArgs = Excel.WorksheetChangedEventArgs | Excel.WorksheetSelection
 
 const emitEvents: Record<keyof Emits, WorksheetEvent> = {
-  changed: 'onChanged'
+  changed: 'onChanged',
+  selectionChanged: 'onSelectionChanged'
 }
 
 const emit = defineEmits<Emits>()
