@@ -17,7 +17,12 @@ export default class VueExcel extends EventTarget {
 
   constructor(options: PluginOptions) {
     super()
-    const namedComponents = this.normalizeComponents(options.components)
+    let namedComponents = {}
+
+    if (options.components) {
+      namedComponents = this.normalizeComponents(options.components)
+    }
+    
     this.excel = Excel
 
     this.activeComponent = shallowRef(null)
