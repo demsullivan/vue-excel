@@ -119,7 +119,7 @@ of the Microsoft docs for more details.
         https: {
           key: fs.readFileSync(path.resolve(`${homedir()}/.office-addin-dev-certs/localhost.key`)),
           cert: fs.readFileSync(path.resolve(`${homedir()}/.office-addin-dev-certs/localhost.crt`)),
-          ca: fs.readFileSync(path.resolve(`${homedir()}.office-addin-dev-certs/ca.crt`))
+          ca: fs.readFileSync(path.resolve(`${homedir()}/.office-addin-dev-certs/ca.crt`))
         }
       }
     })
@@ -163,7 +163,7 @@ of the Microsoft docs for more details.
     import { connectExcel } from 'vue-excel'
 
     window.Office.onReady(async () => {
-      const vueExcel = connectExcel()
+      const vueExcel = await connectExcel()
 
       createApp(App)
       .use(vueExcel, {})
@@ -181,7 +181,7 @@ of the Microsoft docs for more details.
     const rangeValue = ref()
 
     function sheetChanged(event: Excel.WorksheetChangedEventArgs) {
-      rangeValue.value = event.details.valueAfter
+      rangeValue.value = [[event.details.valueAfter]]
     }
 
     function updateRange() {
