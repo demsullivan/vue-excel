@@ -72,11 +72,12 @@ Select the following options from the Office.js generator prompts:
 - What do you want to name your add-in? `add-in`
 - Which Office client application would you like to support? `Excel`
 
-### Copy the `manifest.xml` and `assets` directory to your Vue app
+### Copy the `manifest.xml` and `assets` directory to your project root
 
 ```
-mv vue-excel-example-office/manifest.xml vue-excel-example
-mv vue-excel-example-office/assets vue-excel-example/public
+mv add-in/manifest.xml .
+mv add-in/assets public
+rm -rf add-in
 ```
 
 ### Install vue-excel and other office dependencies
