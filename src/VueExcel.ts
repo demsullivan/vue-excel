@@ -13,16 +13,16 @@ export default class VueExcel extends EventTarget {
   activeWorksheet: Ref<Excel.Worksheet | null>
   worksheets: Ref<Excel.WorksheetCollection | null>
   workbookEmits: EmitsOptions
-  context!: Context
+  context: Context
 
-  constructor(options: PluginOptions) {
+  constructor(options: PluginOptions, ctx: Excel.RequestContext) {
     super()
     let namedComponents = {}
 
     if (options.components) {
       namedComponents = this.normalizeComponents(options.components)
     }
-    
+
     this.excel = Excel
 
     this.activeComponent = shallowRef(null)
@@ -33,12 +33,10 @@ export default class VueExcel extends EventTarget {
     this.activeWorksheet = shallowRef(null)
     this.worksheets = shallowRef(null)
     this.components = shallowRef({})
+    this.context = new Context(ctx)
     this.workbookEmits = options.workbookEmits || []
 
-    window.Office.onReady(async () => {
-      OfficeExtension.config.extendedErrorLogging = true
-      await Excel.run(this.initialize.bind(this, namedComponents))
-    })
+    Excel.run(ctx, this.initialize.bind(this, namedComponents));
   }
 
   normalizeComponents(components: ComponentList): Record<string, MaybeComponent> {
@@ -56,7 +54,6 @@ export default class VueExcel extends EventTarget {
   }
   
   async initialize(components: Record<string, MaybeComponent>, ctx: Excel.RequestContext) {
-    this.context = new Context(ctx)
     const workbook = ctx.workbook.load()
     const activeWorksheet = ctx.workbook.worksheets.getActiveWorksheet().load()
     const workbookNames = ctx.workbook.names.load(['name', 'value'])

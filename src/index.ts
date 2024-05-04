@@ -10,27 +10,31 @@ import Table, { type TableChangedEvent } from './components/Table.vue'
 export { VueExcel, Context, Worksheet, Range, Table }
 export type { TableChangedEvent }
 
-export function connectExcel() {
-  return {
-    install(app: App, options: PluginOptions): void {
-      if (!window.Office) { throw "No office! Bad!" }
-      const excel = new VueExcel(options)
+function installComponents(app: App, options: PluginOptions): void {
+  const prefix = options.prefix || ""
+  app.component(`${prefix}Workbook`, createWorkbookComponent(options.workbookEmits))
+    .component(`${prefix}Worksheet`, Worksheet)
+    .component(`${prefix}Range`, Range)
+    .component(`${prefix}Table`, Table)
+}
 
-      this.installComponents(app, options)
-      this.installExcel(app, excel)
-    },
+function installExcel(app: App, excel: VueExcel): void {
+  app.provide('vueExcel', excel)
+  app.config.globalProperties.vueExcel = excel
+}
 
-    installComponents(app: App, options: PluginOptions): void {
-      const prefix = options.prefix || ""
-      app.component(`${prefix}Workbook`, createWorkbookComponent(options.workbookEmits))
-        .component(`${prefix}Worksheet`, Worksheet)
-        .component(`${prefix}Range`, Range)
-        .component(`${prefix}Table`, Table)
-    },
+export async function connectExcel() {
+  if (!window.Office) { throw "Office could not be found! Are you sure you loaded office.js in your index.html?" }
+  if (!Excel) { throw "Excel could not be found!" }
 
-    installExcel(app: App, excel: VueExcel): void {
-      app.provide('vueExcel', excel)
-      app.config.globalProperties.vueExcel = excel
+  return await Excel.run(async (ctx: Excel.RequestContext) => {
+    return {
+      install(app: App, options: PluginOptions): void {
+        const excel = new VueExcel(options, ctx)
+  
+        installComponents(app, options)
+        installExcel(app, excel)
+      }
     }
-  }
+  })
 }
