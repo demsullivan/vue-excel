@@ -21,6 +21,7 @@ watch(
     if (oldValue == undefined && (value == null || value == undefined)) return
     if (!binding.value) return
 
+    
     return await vueExcel.excel.run(async (ctx: Excel.RequestContext) => {
       const range = (binding.value as Excel.Binding).getRange()
 
@@ -30,7 +31,7 @@ watch(
         range.values = value
       }
 
-      await ctx.sync()
+      await range.context.sync()
     })
   }
 )
