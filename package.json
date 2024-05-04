@@ -26,6 +26,7 @@
   "license": "MIT",
   "dependencies": {
     "@microsoft/office-js": "^1.1.91",
+    "lodash": "^4.17.21",
     "office-toolbox": "^0.3.0",
     "vue": "^3.4.21"
   },
