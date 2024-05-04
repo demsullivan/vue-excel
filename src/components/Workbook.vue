@@ -1,7 +1,7 @@
 <script lang="ts">
 import { type EmitsOptions, defineComponent, type ComponentOptions, h } from 'vue';
 import { type MaybeComponent, type ComponentRegistry } from '../types'
-import _ from 'lodash'
+import * as _ from 'lodash'
 
 export default function(emits?: EmitsOptions) {
   return defineComponent({
