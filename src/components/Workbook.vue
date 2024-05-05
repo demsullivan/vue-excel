@@ -1,40 +1,75 @@
 <script setup lang="ts">
-import { inject } from 'vue';
-import type VueExcel from '../VueExcel'
+import { inject, onMounted, provide, ref, shallowRef, watch } from 'vue'
+import type Context from '@/Context'
+import type { NormalizedRoute } from '@/types'
+import type { VueExcelGlobalState } from '..'
 
-const vueExcel: VueExcel = inject('vueExcel') as VueExcel
+const vueExcel = inject('vueExcel') as VueExcelGlobalState
 
-/*
-Static Routing Options
+const context = vueExcel.context
+const routes = vueExcel.routes
 
-- Worksheet binds to sheet by name
-- Worksheet only renders its children if its the active worksheet
-- Useful for statically named worksheets
-- MyComponent could access worksheet via injection
-<Workbook>
-  <Worksheet name="Sheet1">
-    <MyComponent />
-  </Worksheet>
-</Workbook>
+const workbookNames = shallowRef<Excel.NamedItemCollection>()
+const activeWorksheet = shallowRef<Excel.Worksheet>()
+const activeWorksheetNames = shallowRef<Excel.NamedItemCollection>()
+const computedRoutes = ref<any[]>([])
 
-- MyComponent defines Worksheet
-- Puts routing/display logic under control of MyComponent
-- Allows MyComponent to access Worksheet props/events directly
-<Workbook>
-  <MyComponent />
-</Workbook>
+async function worksheetActivated(event: Excel.WorksheetActivatedEventArgs) {
+  const { xlSheet, xlNames } = await context.fetch(async (ctx: Excel.RequestContext) => {
+    const xlSheet = ctx.workbook.worksheets.getItem(event.worksheetId)
+    return {
+      xlSheet,
+      xlNames: xlSheet.names
+    }
+  })
+  vueExcel.activeWorksheet.value = xlSheet
+  activeWorksheetNames.value = xlNames
+}
 
-Dynamic Routing Options
-<Workbook>
-  <Worksheet :has-name="{ account: 'thing' }">
-    <ThingComponent />
-  </Worksheet>
-</Workbook>
+onMounted(async () => {
+  const { xlWorkbook, xlWorksheets, xlNames, xlActiveWorksheet } = await context.fetch(
+    async (ctx: Excel.RequestContext) => {
+      const xlWorksheets = ctx.workbook.worksheets
 
-*/
+      xlWorksheets.onActivated.add(worksheetActivated)
+
+      return {
+        xlWorksheets,
+        xlWorkbook: ctx.workbook,
+        xlNames: ctx.workbook.names,
+        xlActiveWorksheet: ctx.workbook.worksheets.getActiveWorksheet()
+      }
+    }
+  )
+
+  vueExcel.workbook.value = xlWorkbook
+  vueExcel.worksheets.value = xlWorksheets
+  vueExcel.activeWorksheet.value = xlActiveWorksheet
+  workbookNames.value = xlNames
+})
+
+watch(
+  () => vueExcel.activeWorksheet.value,
+  async (newValue) => {
+    if (!newValue) return
+
+    computedRoutes.value = await Promise.all(
+      routes.map(async (route: NormalizedRoute) => {
+        return {
+          isActive: newValue ? await route.activated(context, newValue) : false,
+          component: route.component
+        }
+      })
+    )
+  }
+)
 </script>
 
 <template>
-  <slot v-if="vueExcel"></slot>
+  <div v-if="vueExcel.workbook">
+    <slot></slot>
+  </div>
+  <div v-for="route in computedRoutes" :style="route.isActive ? null : 'display: none'">
+    <component :is="route.component" />
+  </div>
 </template>
-
