@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { type ShallowRef, inject, onMounted, shallowRef, watch, ref, type Ref } from 'vue';
-import type { VueExcel } from '..';
+import { type ShallowRef, inject, shallowRef, watch, ref } from 'vue'
+import type Context from '@/Context'
 
-export type TableRowRecord = Record<string, any>;
+export type TableRowRecord = Record<string, any>
 
 export interface TableRow {
   rowIndex: number
-  range:    Excel.Range
-  record:   TableRowRecord
+  range: Excel.Range
+  record: TableRowRecord
 }
 
 export interface TableChangedEvent extends Excel.TableChangedEventArgs {
@@ -22,14 +22,14 @@ type Props = {
 }
 
 type Emits = {
-  dataChanged: [event: TableChangedEvent],
+  dataChanged: [event: TableChangedEvent]
   selectionChanged: [event: Excel.TableSelectionChangedEventArgs]
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-const vueExcel = inject('vueExcel') as VueExcel
+const context = inject('vueExcel.context') as Context
 const worksheet = inject<ShallowRef<Excel.Worksheet>>('vueExcel.scope.worksheet')
 const table = shallowRef<Excel.Table>()
 const headerRange = shallowRef<Excel.Range>()
@@ -38,13 +38,15 @@ const headers = ref<string[] | undefined>(props.headers)
 async function updateTable(overwrite: boolean) {
   if (!worksheet) return
 
-  const { xlTable, xlHeaderRange } = await vueExcel.context.sync(async (ctx: Excel.RequestContext) => {
+  const { xlTable, xlHeaderRange } = await context.fetch(async (ctx: Excel.RequestContext) => {
     let excelTable
 
     if (table.value) {
       excelTable = table.value
     } else {
-      excelTable = props.name ? worksheet.value.tables.getItem(props.name) : worksheet?.value.tables.getItemAt(0)
+      excelTable = props.name
+        ? worksheet.value.tables.getItem(props.name)
+        : worksheet?.value.tables.getItemAt(0)
       excelTable.load('name')
       await ctx.sync()
     }
@@ -55,18 +57,19 @@ async function updateTable(overwrite: boolean) {
 
     if (overwrite && props.data && props.headers) {
       excelTable.delete()
-      let address = headerRange.value ? headerRange.value.address : "A1"
+      let address = headerRange.value ? headerRange.value.address : 'A1'
 
       const newTable = worksheet.value.tables.add(address, true)
       newTable.name = tableName
       newTable.getHeaderRowRange().values = [props.headers]
 
       props.data.forEach((record: Record<string, any>) => {
-        const values = props.headers?.reduce(
+        const values = (props.headers as string[]).reduce(
           (data, key) => {
             data.push(record[key])
             return data
-          }, []
+          },
+          <string[]>[]
         )
 
         newTable.rows.add(undefined, [values])
@@ -75,15 +78,15 @@ async function updateTable(overwrite: boolean) {
       excelTable = newTable
     }
 
-    excelTable.onChanged.add(onDataChanged);
-    excelTable.onSelectionChanged.add(onSelectionChanged);
+    excelTable.onChanged.add(onDataChanged)
+    excelTable.onSelectionChanged.add(onSelectionChanged)
 
     return {
       xlTable: excelTable,
       xlHeaderRange: excelTable.getHeaderRowRange()
     }
   })
-  
+
   table.value = xlTable
   headerRange.value = xlHeaderRange
 
@@ -101,7 +104,7 @@ watch(
   () => worksheet?.value,
   async (value) => {
     if (value) {
-      updateTable(false);
+      updateTable(false)
     }
   }
 )
@@ -127,24 +130,36 @@ function getRowById(id: string | number) {
 }
 
 type GetRecordArgs = {
-  id?: any;
-  row?: number;
-  field?: string;
-  value?: any;
-  range?: Excel.Range;
+  id?: any
+  row?: number
+  field?: string
+  value?: any
+  range?: Excel.Range
 }
 
 async function getTableRow({ id }: { id: any }): Promise<TableRow | null>
 async function getTableRow({ row }: { row: number }): Promise<TableRow | null>
 async function getTableRow({ range }: { range: Excel.Range }): Promise<TableRow | null>
-async function getTableRow({ field, value }: { field: string, value: any }): Promise<TableRow | null>
-async function getTableRow({ id, row, field, value, range }: GetRecordArgs): Promise<TableRow | null> {
+async function getTableRow({
+  field,
+  value
+}: {
+  field: string
+  value: any
+}): Promise<TableRow | null>
+async function getTableRow({
+  id,
+  row,
+  field,
+  value,
+  range
+}: GetRecordArgs): Promise<TableRow | null> {
   let rowValues: any[] = []
 
   if (!headers?.value) return null
 
   if (id) {
-    field = "id"
+    field = 'id'
     value = id
   }
 
@@ -154,7 +169,7 @@ async function getTableRow({ id, row, field, value, range }: GetRecordArgs): Pro
     } else if (row) {
       range = await getRowRange({ row })
     }
-  } catch(e) {
+  } catch (e) {
     throw `getRecord: Could not find range for row based on provided values`
   }
 
@@ -163,11 +178,10 @@ async function getTableRow({ id, row, field, value, range }: GetRecordArgs): Pro
   try {
     rowValues = range.values[0]
   } catch {
-    range = range.load('values')
-    await range.context.sync()
+    range.load('values')
+    await context.sync()
     rowValues = range.values[0]
   }
-  
 
   // TODO: check types and convert as necessary, especially dates
   const record = <TableRowRecord>headers.value?.reduce(
@@ -180,22 +194,43 @@ async function getTableRow({ id, row, field, value, range }: GetRecordArgs): Pro
 
   return {
     rowIndex: row || range.rowIndex,
-    range, record
+    range,
+    record
   }
 }
 
 type UpdateRowArgs = {
-  id?: string | number;
-  row?: number;
-  field?: string;
-  value?: any;
+  id?: string | number
+  row?: number
+  field?: string
+  value?: any
   record?: Record<string, any>
   tableRow?: TableRow
 }
 
-async function updateTableRow({ id, record }: { id: string | number, record: Record<string, any>}): Promise<void>
-async function updateTableRow({ row, record }: { row: number, record: Record<string, any> }): Promise<void>
-async function updateTableRow({ field, value, record }: { field: string, value: any, record: Record<string, any> }): Promise<void>
+async function updateTableRow({
+  id,
+  record
+}: {
+  id: string | number
+  record: Record<string, any>
+}): Promise<void>
+async function updateTableRow({
+  row,
+  record
+}: {
+  row: number
+  record: Record<string, any>
+}): Promise<void>
+async function updateTableRow({
+  field,
+  value,
+  record
+}: {
+  field: string
+  value: any
+  record: Record<string, any>
+}): Promise<void>
 async function updateTableRow({ tableRow }: { tableRow: TableRow }): Promise<void>
 async function updateTableRow({ id, row, field, value, record, tableRow }: UpdateRowArgs) {
   if (!headers?.value) return
@@ -205,9 +240,8 @@ async function updateTableRow({ id, row, field, value, record, tableRow }: Updat
 
   let rowRange: Excel.Range | undefined
 
-  
   if (id) {
-    field = "id"
+    field = 'id'
     value = id
   }
 
@@ -235,8 +269,7 @@ async function updateTableRow({ id, row, field, value, record, tableRow }: Updat
     })
   ]
 
-  vueExcel.context.removeTrackedObject(rowRange)
-  await vueExcel.context.doSync()
+  await context.sync()
 }
 
 defineExpose({
@@ -247,9 +280,17 @@ defineExpose({
 ////////////////////////////////////////////////
 // INTERNAL FUNCTIONS
 ////////////////////////////////////////////////
-async function getRowRange({ field, value }: { field: string, value: any }): Promise<Excel.Range>
+async function getRowRange({ field, value }: { field: string; value: any }): Promise<Excel.Range>
 async function getRowRange({ row }: { row: number }): Promise<Excel.Range>
-async function getRowRange({ row, field, value }: { row?: number, field?: string, value?: any }): Promise<Excel.Range | undefined> {
+async function getRowRange({
+  row,
+  field,
+  value
+}: {
+  row?: number
+  field?: string
+  value?: any
+}): Promise<Excel.Range | undefined> {
   if (!worksheet?.value) return
   if (!headers?.value) return
   if (!headerRange?.value) return
@@ -258,36 +299,39 @@ async function getRowRange({ row, field, value }: { row?: number, field?: string
   let rowRange: Excel.Range | undefined
 
   if (field && value) {
-    rowIndex = await getRowByValue(field, value);
+    rowIndex = await getRowByValue(field, value)
   } else if (row) {
     rowIndex = row
   }
 
   if (!rowIndex) throw `Could not find range`
 
+  const { range } = await context.fetch(async () => {
+    if (!headerRange.value) return { range: undefined }
+    return {
+      range: worksheet.value.getRangeByIndexes(rowIndex, 0, 1, headerRange.value.columnCount)
+    }
+  })
 
-  const range = worksheet.value.getRangeByIndexes(rowIndex, 0, 1, headerRange.value.columnCount).load()
-  vueExcel.context.addTrackedObject(range)
-  await vueExcel.context.context.sync()
   return range
-
 }
 
 async function getRowByValue(field: string, value: any): Promise<number | null> {
-  if (!table.value) return null;
+  if (!table.value) return null
 
-  const { foundCell } = await vueExcel.context.sync(async (ctx: Excel.RequestContext) => {
+  const { foundCell } = await context.fetch(async (ctx: Excel.RequestContext) => {
     const columnRange = table.value?.columns.getItem(field).getRange()
     return {
-      foundCell: columnRange?.findOrNullObject(
-        value, { completeMatch: true, searchDirection: Excel.SearchDirection.forward }
-      )
+      foundCell: columnRange?.findOrNullObject(value, {
+        completeMatch: true,
+        searchDirection: Excel.SearchDirection.forward
+      })
     }
-  });
+  })
 
   if (!foundCell) return null
 
-  return foundCell.isNullObject ? null : foundCell?.rowIndex;
+  return foundCell.isNullObject ? null : foundCell?.rowIndex
 }
 
 ////////////////////////////////////////////////
@@ -297,13 +341,13 @@ async function onDataChanged(event: Excel.TableChangedEventArgs) {
   if (!table.value) return
   if (!worksheet?.value) return
 
-  const range = event.getRangeOrNullObject(worksheet.value.context).load();
+  const range = event.getRangeOrNullObject(worksheet.value.context).load()
 
   await worksheet.value.context.sync()
 
   if (range.isNullObject) return
 
-  const tableRow = await getTableRow({ row: range.rowIndex });
+  const tableRow = await getTableRow({ row: range.rowIndex })
 
   if (!tableRow) return
 
@@ -315,5 +359,4 @@ async function onSelectionChanged(event: Excel.TableSelectionChangedEventArgs) {
 }
 </script>
 
-<template>
-</template>
+<template></template>
