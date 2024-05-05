@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { onMounted, inject, ref, type Ref, watch, type EmitsOptions, computed, shallowRef, provide } from 'vue'
-import VueExcel from '../VueExcel'
+import { onMounted, inject, shallowRef, provide } from 'vue'
+import type Context from '@/Context'
+import { EmitFlags } from 'typescript'
 
 // REFS AND PROPS
-const vueExcel: VueExcel = inject('vueExcel') as VueExcel
+const context: Context = inject('vueExcel.context') as Context
 const worksheet = shallowRef<Excel.Worksheet>()
 
 provide('vueExcel.scope.worksheet', worksheet)
-defineExpose({ worksheet });
+defineExpose({ worksheet })
 
 type Props = {
   name: string
@@ -16,15 +17,28 @@ type Props = {
 const props = defineProps<Props>()
 
 // EMITS AND EVENTS
-type Emits = {
-  changed: [event: any],
-  selectionChanged: [event: any]
+
+type EmitEventMap = {
+  changed: { handler: 'onChanged'; eventArgs: Excel.WorksheetChangedEventArgs }
+  selectionChanged: {
+    handler: 'onSelectionChanged'
+    eventArgs: Excel.WorksheetSelectionChangedEventArgs
+  }
 }
 
-type WorksheetEvent = "onChanged" | "onSelectionChanged"
-type WorksheetEventArgs = Excel.WorksheetChangedEventArgs | Excel.WorksheetSelection
+type Emits = {
+  [P in keyof EmitEventMap]: [event: EmitEventMap[P]['eventArgs']]
+}
 
-const emitEvents: Record<keyof Emits, WorksheetEvent> = {
+type WorksheetEventHandler = {
+  [P in keyof EmitEventMap]: EmitEventMap[P]['handler']
+}[keyof EmitEventMap]
+
+type WorksheetEventArgs = {
+  [P in keyof EmitEventMap]: EmitEventMap[P]['eventArgs']
+}[keyof EmitEventMap]
+
+const emitEvents: Record<keyof Emits, WorksheetEventHandler> = {
   changed: 'onChanged',
   selectionChanged: 'onSelectionChanged'
 }
@@ -33,6 +47,7 @@ const emit = defineEmits<Emits>()
 
 // FUNCTIONS
 async function emitEvent(emitName: keyof Emits, event: WorksheetEventArgs) {
+  // @ts-ignore - TS doesn't like the dynamic emit name because of how defineEmits is typed.
   emit(emitName, event)
 }
 
@@ -43,19 +58,18 @@ function setupEventListeners() {
   const emitNames = Object.keys(emitEvents) as (keyof Emits)[]
 
   emitNames.forEach((emitName: keyof Emits) => {
-    const eventName: WorksheetEvent = emitEvents[emitName]
+    const eventName: WorksheetEventHandler = emitEvents[emitName]
     sheet[eventName].add(emitEvent.bind({}, emitName))
   })
 }
 
-onMounted(async() => {
-  return await vueExcel.context.run(async (ctx: Excel.RequestContext) => {
-    const excelWorksheet = ctx.workbook.worksheets.getItem(props.name).load()
-    ctx.trackedObjects.add(excelWorksheet)
-    await ctx.sync()
-    worksheet.value = excelWorksheet
-    setupEventListeners()
-  })
+onMounted(async () => {
+  const { xlWorksheet } = await context.fetch(async (ctx) => ({
+    xlWorksheet: ctx.workbook.worksheets.getItem(props.name)
+  }))
+
+  worksheet.value = xlWorksheet
+  setupEventListeners()
 })
 </script>
 

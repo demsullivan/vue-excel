@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, shallowRef, watch } from 'vue'
-import type VueExcel from '../VueExcel';
-
+import { inject, onMounted, shallowRef, watch } from 'vue'
+import type Context from '@/Context'
 
 // REFS AND PROPS
 type Props = {
@@ -12,7 +11,7 @@ type Props = {
 
 const props = defineProps<Props>()
 
-const vueExcel: VueExcel = inject('vueExcel') as VueExcel
+const context: Context = inject('vueExcel.context') as Context
 const binding = shallowRef<Excel.Binding>()
 
 watch(
@@ -21,18 +20,15 @@ watch(
     if (oldValue == undefined && (value == null || value == undefined)) return
     if (!binding.value) return
 
-    
-    return await vueExcel.excel.run(async (ctx: Excel.RequestContext) => {
-      const range = (binding.value as Excel.Binding).getRange()
+    const range = (binding.value as Excel.Binding).getRange()
 
-      if (oldValue != null && oldValue != undefined && (value == null || value == undefined)) {
-        range.clear()
-      } else if (value instanceof Array) {
-        range.values = value
-      }
+    if (oldValue != null && oldValue != undefined && (value == null || value == undefined)) {
+      range.clear()
+    } else if (value instanceof Array) {
+      range.values = value
+    }
 
-      await range.context.sync()
-    })
+    await context.sync()
   }
 )
 
@@ -46,37 +42,35 @@ const emit = defineEmits<Emits>()
 
 // FUNCTIONS
 onMounted(async () => {
-  return await vueExcel.excel.run(async (ctx: Excel.RequestContext) => {
-    let excelBinding
+  const { xlBinding } = await context.fetch(async (ctx: Excel.RequestContext) => {
+    let xlBinding
 
     if (props.address) {
-      excelBinding = ctx.workbook.bindings.add(
-        props.address, Excel.BindingType.range, props.address
-      )
+      xlBinding = ctx.workbook.bindings.add(props.address, Excel.BindingType.range, props.address)
     } else if (props.name) {
-      excelBinding = ctx.workbook.bindings.addFromNamedItem(
-        props.name, Excel.BindingType.range, props.name
+      xlBinding = ctx.workbook.bindings.addFromNamedItem(
+        props.name,
+        Excel.BindingType.range,
+        props.name
       )
     } else {
-      console.error("You must pass either address or name props to a Range component!")
-      return
+      console.error('You must pass either address or name props to a Range component!')
+      return { xlBinding: undefined }
     }
 
-    excelBinding.onDataChanged.add(async (event: Excel.BindingDataChangedEventArgs) => {
+    xlBinding.onDataChanged.add(async (event: Excel.BindingDataChangedEventArgs) => {
       emit('dataChanged', event)
     })
 
-    excelBinding.onSelectionChanged.add(async (event: Excel.BindingSelectionChangedEventArgs) => {
+    xlBinding.onSelectionChanged.add(async (event: Excel.BindingSelectionChangedEventArgs) => {
       emit('selectionChanged', event)
     })
 
-    await ctx.sync()
-
-    binding.value = excelBinding
+    return { xlBinding }
   })
-})
 
+  binding.value = xlBinding
+})
 </script>
 
-<template>
-</template>
+<template></template>

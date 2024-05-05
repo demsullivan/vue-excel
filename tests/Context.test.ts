@@ -2,7 +2,7 @@ import { expect, it, vi } from 'vitest'
 import Context from '@/Context'
 
 import OfficeAddinMock from 'office-addin-mock'
-import { describe } from 'node:test'
+import test, { describe } from 'node:test'
 
 const mockData = {
   workbook: {
@@ -50,6 +50,16 @@ describe('.fetch', () => {
 })
 
 describe('.sync', () => {
+  it('calls sync on the RequestContext', () => {
+    const spy = vi.spyOn(contextMock, 'sync')
+
+    subject.sync()
+
+    expect(spy).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('.run', () => {
   it('automatically syncs the context', async () => {
     const { range } = await subject.fetch(async (ctx) => ({
       range: ctx.workbook.getSelectedRange()
@@ -57,7 +67,7 @@ describe('.sync', () => {
 
     const spy = vi.spyOn(contextMock, 'sync')
 
-    await subject.sync(async (ctx) => {
+    await subject.run(async (ctx) => {
       range.values = [
         ['C', 'D', 'E', 'F', 'G'],
         ['C', 'D', 'E', 'F', 'G']
