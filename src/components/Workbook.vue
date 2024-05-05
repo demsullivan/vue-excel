@@ -1,52 +1,40 @@
-<script lang="ts">
-import { type EmitsOptions, defineComponent, type ComponentOptions, h } from 'vue';
-import { type MaybeComponent, type ComponentRegistry } from '../types'
-import * as _ from 'lodash'
+<script setup lang="ts">
+import { inject } from 'vue';
+import type VueExcel from '../VueExcel'
 
-export default function(emits?: EmitsOptions) {
-  return defineComponent({
-    inject: ['vueExcel'],
-    emits: emits,
-    methods: {
-      eventsForComponent(component: MaybeComponent) {
-        const componentWithEmits = component as ComponentOptions
-        if (componentWithEmits == null || componentWithEmits.emits == undefined) return {}
-      
-        return componentWithEmits.emits.reduce((events: Record<string, Function>, emitName: string) => {
-          events[`on${_.upperFirst(emitName)}`] = (event: any) => {
-            this.$emit(emitName, event)
-          }
-      
-          return events
-        }, {})
-      }
-    },
-    computed: {
-      activeWorksheetName(): string { return this.vueExcel.activeWorksheet.value.name },
-      components(): ComponentRegistry { return this.vueExcel.components.value }
-    },
-    render() {
-      const componentNodes = Object.keys(this.components).map(name => {
-        const config = this.components[name]
+const vueExcel: VueExcel = inject('vueExcel') as VueExcel
 
-        if (config.component === undefined) return
-        return h(
-          'div',
-          { style: name !== this.activeWorksheetName ? 'display: none' : '' },
-          [
-            h(
-              config.component,
-              { name: name, ...config.props, ...this.eventsForComponent(config.component) }
-              )
-          ]
-        )
-      });
+/*
+Static Routing Options
 
-      return [
-        ...componentNodes,
-        this.$slots.default()
-      ]
-    }
-  });
-}
+- Worksheet binds to sheet by name
+- Worksheet only renders its children if its the active worksheet
+- Useful for statically named worksheets
+- MyComponent could access worksheet via injection
+<Workbook>
+  <Worksheet name="Sheet1">
+    <MyComponent />
+  </Worksheet>
+</Workbook>
+
+- MyComponent defines Worksheet
+- Puts routing/display logic under control of MyComponent
+- Allows MyComponent to access Worksheet props/events directly
+<Workbook>
+  <MyComponent />
+</Workbook>
+
+Dynamic Routing Options
+<Workbook>
+  <Worksheet :has-name="{ account: 'thing' }">
+    <ThingComponent />
+  </Worksheet>
+</Workbook>
+
+*/
 </script>
+
+<template>
+  <slot v-if="vueExcel"></slot>
+</template>
+
