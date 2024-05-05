@@ -35,29 +35,73 @@ const table = shallowRef<Excel.Table>()
 const headerRange = shallowRef<Excel.Range>()
 const headers = ref<string[] | undefined>(props.headers)
 
+async function updateTable(overwrite: boolean) {
+  if (!worksheet) return
+
+  const { xlTable, xlHeaderRange } = await vueExcel.context.sync(async (ctx: Excel.RequestContext) => {
+    let excelTable
+
+    if (table.value) {
+      excelTable = table.value
+    } else {
+      excelTable = props.name ? worksheet.value.tables.getItem(props.name) : worksheet?.value.tables.getItemAt(0)
+      excelTable.load('name')
+      await ctx.sync()
+    }
+
+    if (!excelTable) return { xlTable: undefined, xlHeaderRange: undefined }
+
+    const tableName = excelTable.name
+
+    if (overwrite && props.data && props.headers) {
+      excelTable.delete()
+      let address = headerRange.value ? headerRange.value.address : "A1"
+
+      const newTable = worksheet.value.tables.add(address, true)
+      newTable.name = tableName
+      newTable.getHeaderRowRange().values = [props.headers]
+
+      props.data.forEach((record: Record<string, any>) => {
+        const values = props.headers?.reduce(
+          (data, key) => {
+            data.push(record[key])
+            return data
+          }, []
+        )
+
+        newTable.rows.add(undefined, [values])
+      })
+
+      excelTable = newTable
+    }
+
+    excelTable.onChanged.add(onDataChanged);
+    excelTable.onSelectionChanged.add(onSelectionChanged);
+
+    return {
+      xlTable: excelTable,
+      xlHeaderRange: excelTable.getHeaderRowRange()
+    }
+  })
+  
+  table.value = xlTable
+  headerRange.value = xlHeaderRange
+
+  if (!headers.value && xlHeaderRange) {
+    headers.value = xlHeaderRange.values[0]
+  }
+}
+
+function initializeTable(table: Excel.Table) {
+  table.onChanged.add(onDataChanged)
+  table.onSelectionChanged.add(onSelectionChanged)
+}
+
 watch(
   () => worksheet?.value,
   async (value) => {
     if (value) {
-      const { xlTable, xlHeaderRange } = await vueExcel.context.sync(async (ctx: Excel.RequestContext) => {
-        const excelTable = props.name ? value.tables.getItem(props.name) : value.tables.getItemAt(0);
-        
-        // TODO: create the table if it doesn't exist
-        excelTable.onChanged.add(onDataChanged)
-        excelTable.onSelectionChanged.add(onSelectionChanged)
-
-        return { 
-          xlTable: excelTable,
-          xlHeaderRange: excelTable.getHeaderRowRange()
-        }
-      })
-
-      table.value = xlTable
-      headerRange.value = xlHeaderRange
-
-      if (!headers.value) {
-        headers.value = xlHeaderRange.values[0]
-      }
+      updateTable(false);
     }
   }
 )
@@ -70,36 +114,7 @@ watch(
     if (!worksheet?.value) return
     if (!headerRange?.value) return
 
-    const tableName = table.value.name
-
-    const { xlTable } = await vueExcel.context.sync(async ctx => {
-      table.value?.delete()
-      
-
-      const newTable = worksheet.value.tables.add(
-        headerRange.value?.address, true
-      );
-
-      newTable.name = tableName
-
-      newTable.getHeaderRowRange().values = [props.headers];
-
-      value.forEach((record: Record<string, any>) => {
-        const values = props.headers.reduce(
-          (data, key) => {
-            data.push(record[key])
-            return data
-          }, []
-        )
-
-        newTable.rows.add(undefined, [values])
-      })
-
-      return { xlTable: newTable }
-
-    })
-
-    table.value = xlTable
+    updateTable(true)
   },
   { immediate: true }
 )
