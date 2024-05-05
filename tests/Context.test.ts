@@ -1,5 +1,5 @@
 import { expect, it, vi } from 'vitest'
-import Context from '@/Context'
+import Context from '../src/Context'
 
 import OfficeAddinMock from 'office-addin-mock'
 import test, { describe } from 'node:test'
@@ -28,7 +28,7 @@ const mockData = {
   }
 }
 
-const contextMock = new OfficeAddinMock.OfficeMockObject(mockData)
+const contextMock = new OfficeAddinMock.OfficeMockObject(mockData) as any
 
 const subject = new Context(contextMock)
 

@@ -1,52 +1,75 @@
-<script lang="ts">
-import { type EmitsOptions, defineComponent, type ComponentOptions, h } from 'vue';
-import { type MaybeComponent, type ComponentRegistry } from '../types'
-import * as _ from 'lodash'
+<script setup lang="ts">
+import { inject, onMounted, provide, ref, shallowRef, watch } from 'vue'
+import type Context from '@/Context'
+import type { NormalizedRoute } from '@/types'
+import type { VueExcelGlobalState } from '..'
 
-export default function(emits?: EmitsOptions) {
-  return defineComponent({
-    inject: ['vueExcel'],
-    emits: emits,
-    methods: {
-      eventsForComponent(component: MaybeComponent) {
-        const componentWithEmits = component as ComponentOptions
-        if (componentWithEmits == null || componentWithEmits.emits == undefined) return {}
-      
-        return componentWithEmits.emits.reduce((events: Record<string, Function>, emitName: string) => {
-          events[`on${_.upperFirst(emitName)}`] = (event: any) => {
-            this.$emit(emitName, event)
-          }
-      
-          return events
-        }, {})
-      }
-    },
-    computed: {
-      activeWorksheetName(): string { return this.vueExcel.activeWorksheet.value.name },
-      components(): ComponentRegistry { return this.vueExcel.components.value }
-    },
-    render() {
-      const componentNodes = Object.keys(this.components).map(name => {
-        const config = this.components[name]
+const vueExcel = inject('vueExcel') as VueExcelGlobalState
 
-        if (config.component === undefined) return
-        return h(
-          'div',
-          { style: name !== this.activeWorksheetName ? 'display: none' : '' },
-          [
-            h(
-              config.component,
-              { name: name, ...config.props, ...this.eventsForComponent(config.component) }
-              )
-          ]
-        )
-      });
+const context = vueExcel.context
+const routes = vueExcel.routes
 
-      return [
-        ...componentNodes,
-        this.$slots.default()
-      ]
+const workbookNames = shallowRef<Excel.NamedItemCollection>()
+const activeWorksheet = shallowRef<Excel.Worksheet>()
+const activeWorksheetNames = shallowRef<Excel.NamedItemCollection>()
+const computedRoutes = ref<any[]>([])
+
+async function worksheetActivated(event: Excel.WorksheetActivatedEventArgs) {
+  const { xlSheet, xlNames } = await context.fetch(async (ctx: Excel.RequestContext) => {
+    const xlSheet = ctx.workbook.worksheets.getItem(event.worksheetId)
+    return {
+      xlSheet,
+      xlNames: xlSheet.names
     }
-  });
+  })
+  vueExcel.activeWorksheet.value = xlSheet
+  activeWorksheetNames.value = xlNames
 }
+
+onMounted(async () => {
+  const { xlWorkbook, xlWorksheets, xlNames, xlActiveWorksheet } = await context.fetch(
+    async (ctx: Excel.RequestContext) => {
+      const xlWorksheets = ctx.workbook.worksheets
+
+      xlWorksheets.onActivated.add(worksheetActivated)
+
+      return {
+        xlWorksheets,
+        xlWorkbook: ctx.workbook,
+        xlNames: ctx.workbook.names,
+        xlActiveWorksheet: ctx.workbook.worksheets.getActiveWorksheet()
+      }
+    }
+  )
+
+  vueExcel.workbook.value = xlWorkbook
+  vueExcel.worksheets.value = xlWorksheets
+  vueExcel.activeWorksheet.value = xlActiveWorksheet
+  workbookNames.value = xlNames
+})
+
+watch(
+  () => vueExcel.activeWorksheet.value,
+  async (newValue) => {
+    if (!newValue) return
+
+    computedRoutes.value = await Promise.all(
+      routes.map(async (route: NormalizedRoute) => {
+        return {
+          isActive: newValue ? await route.activated(context, newValue) : false,
+          component: route.component
+        }
+      })
+    )
+  }
+)
 </script>
+
+<template>
+  <div v-if="vueExcel.workbook">
+    <slot></slot>
+  </div>
+  <div v-for="route in computedRoutes" :style="route.isActive ? null : 'display: none'">
+    <component :is="route.component" />
+  </div>
+</template>

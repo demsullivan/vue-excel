@@ -27,7 +27,8 @@ type EmitEventMap = {
 }
 
 type Emits = {
-  [P in keyof EmitEventMap]: [event: EmitEventMap[P]['eventArgs']]
+  changed: [event: Excel.WorksheetChangedEventArgs]
+  selectionChanged: [event: Excel.WorksheetSelectionChangedEventArgs]
 }
 
 type WorksheetEventHandler = {
