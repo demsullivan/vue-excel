@@ -58,9 +58,9 @@ of the Microsoft docs for more details.
 
    ```typescript [vite.config.ts]
    import { fileURLToPath, URL } from 'node:url'
-   import fs from 'fs'
-   import path from 'path'
-   import { homedir } from 'os'
+   import fs from 'fs' // [!code ++]
+   import path from 'path' // [!code ++]
+   import { homedir } from 'os' // [!code ++]
    import { defineConfig } from 'vite'
    import vue from '@vitejs/plugin-vue'
 
@@ -72,14 +72,14 @@ of the Microsoft docs for more details.
          '@': fileURLToPath(new URL('./src', import.meta.url))
        }
      },
-     server: {
-       port: 3000,
-       https: {
-         key: fs.readFileSync(path.resolve(`${homedir()}/.office-addin-dev-certs/localhost.key`)),
-         cert: fs.readFileSync(path.resolve(`${homedir()}/.office-addin-dev-certs/localhost.crt`)),
-         ca: fs.readFileSync(path.resolve(`${homedir()}/.office-addin-dev-certs/ca.crt`))
-       }
-     }
+     server: { // [!code ++]
+       port: 3000, // [!code ++]
+       https: { // [!code ++]
+         key: fs.readFileSync(path.resolve(`${homedir()}/.office-addin-dev-certs/localhost.key`)), // [!code ++]
+         cert: fs.readFileSync(path.resolve(`${homedir()}/.office-addin-dev-certs/localhost.crt`)), // [!code ++]
+         ca: fs.readFileSync(path.resolve(`${homedir()}/.office-addin-dev-certs/ca.crt`)) // [!code ++]
+       } // [!code ++]
+     } // [!code ++]
    })
    ```
 
@@ -123,7 +123,8 @@ Lastly, replace the following files with the contents below.
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite App</title>
-    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script> // [!code ++]
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    // [!code ++]
   </head>
   <body>
     <div id="app"></div>
