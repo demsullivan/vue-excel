@@ -1,27 +1,20 @@
 import Worksheet from '@/components/Worksheet.vue'
-import OfficeAddinMock from 'office-addin-mock'
 import { mount, flushPromises } from '@vue/test-utils'
 import { expect, beforeEach } from 'vitest'
 import { type GlobalStateFixture, composeTestWithState } from './utils'
-import { worksheet } from './mocks'
+import { createContextMock, createWorksheetMock } from './mocks'
 import { defineComponent, h, inject, nextTick } from 'vue'
 
-const activeWorksheetEventTarget = new EventTarget()
-
-const mockData = {
-  workbook: {
-    worksheets: {
-      Sheet2: worksheet({ name: 'Sheet2' }),
-      activeWorksheet: worksheet({ name: 'Sheet1' }, activeWorksheetEventTarget),
-      getItem(name: 'Sheet1' | 'Sheet2') {
-        if (name == 'Sheet1') return this.activeWorksheet
-        return this[name]
-      }
+const mockContext = createContextMock({
+  worksheets: {
+    Sheet2: createWorksheetMock({ name: 'Sheet2' }),
+    getItem(name: 'Sheet1' | 'Sheet2') {
+      if (name == 'Sheet1') return this.activeWorksheet
+      return this[name]
     }
   }
-}
+})
 
-const mockContext = new OfficeAddinMock.OfficeMockObject(mockData) as any
 const it = composeTestWithState(mockContext)
 
 beforeEach<GlobalStateFixture>(async ({ globalState }) => {
@@ -65,8 +58,7 @@ it('emits the onChanged event', async ({ globalState }) => {
 
   await flushPromises()
 
-  const event = new CustomEvent('onChanged', { detail: { address: 'A1' } })
-  activeWorksheetEventTarget.dispatchEvent(event)
+  mockContext.workbook.worksheets.activeWorksheet.onChanged.fire({ address: 'A1' })
   expect(wrapper.emitted()).toHaveProperty('changed')
 })
 

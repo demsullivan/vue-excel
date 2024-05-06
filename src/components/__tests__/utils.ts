@@ -1,4 +1,4 @@
-import { VueExcelGlobalState } from '@/index'
+import { VueExcelGlobalState } from '@/state'
 import { test } from 'vitest'
 
 export interface GlobalStateFixture {

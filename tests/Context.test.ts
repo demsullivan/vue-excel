@@ -1,18 +1,9 @@
 import { expect, it, vi, describe } from 'vitest'
-import OfficeAddinMock from 'office-addin-mock'
 import Context from '@/Context'
+import { createContextMock } from '@/components/__tests__/mocks'
 
-const mockData = {
+const contextMock = createContextMock({
   workbook: {
-    name: 'Test Workbook.xlsx',
-    worksheets: {
-      activeWorksheet: {
-        name: 'Sheet1'
-      },
-      getActiveWorksheet() {
-        return this.activeWorksheet
-      }
-    },
     range: {
       address: 'C2:G3',
       values: [
@@ -24,9 +15,7 @@ const mockData = {
       return this.range
     }
   }
-}
-
-const contextMock = new OfficeAddinMock.OfficeMockObject(mockData) as any
+})
 
 const subject = new Context(contextMock)
 

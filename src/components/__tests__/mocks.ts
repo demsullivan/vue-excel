@@ -1,30 +1,61 @@
-function addEventHandler(eventMocks: EventTarget, name: string) {
-  return {
-    add(callback: () => void) {
-      eventMocks.addEventListener(name, callback)
-    },
+import { add } from 'lodash'
+import OfficeAddinMock from 'office-addin-mock'
 
-    remove(callback: () => void) {
-      eventMocks.removeEventListener(name, callback)
+type EventHandlerMock = {
+  listener: (event: any) => void
+  add(callback: (event: any) => void): void
+  remove(callback: (event: any) => void): void
+  fire(event: any): void
+}
+
+export function createEventHandlerMock(): EventHandlerMock {
+  return {
+    listener: () => {},
+    add(callback: (event: any) => void) {
+      this.listener = callback
+    },
+    remove(callback: (event: any) => void) {
+      this.listener = () => {}
+    },
+    fire(event: any) {
+      this.listener(event)
     }
   }
 }
 
-export function worksheet(properties: {}, eventTarget: EventTarget = new EventTarget()) {
+export function createContextMock(properties: Record<string, any> = {}) {
+  const mockData = {
+    workbook: {
+      name: 'Test Workbook.xlsx',
+      worksheets: {
+        activeWorksheet: createWorksheetMock({ name: 'Sheet1' }),
+        getActiveWorksheet() {
+          return this.activeWorksheet
+        },
+        ...(properties.worksheets || {})
+      },
+      ...(properties.workbook || {})
+    }
+  }
+
+  return new OfficeAddinMock.OfficeMockObject(mockData) as any
+}
+
+export function createWorksheetMock(properties: {}) {
   return {
     id: '1',
     name: 'Sheet1',
     names: {},
-    onCalculated: addEventHandler(eventTarget, 'onCalculated'),
-    onChanged: addEventHandler(eventTarget, 'onChanged'),
-    onColumnSorted: addEventHandler(eventTarget, 'onColumnSorted'),
-    onFormatChanged: addEventHandler(eventTarget, 'onFormatChanged'),
-    onFormulaChanged: addEventHandler(eventTarget, 'onFormulaChanged'),
-    onRowHiddenChanged: addEventHandler(eventTarget, 'onRowHiddenChanged'),
-    onRowSorted: addEventHandler(eventTarget, 'onRowSorted'),
-    onSelectionChanged: addEventHandler(eventTarget, 'onSelectionChanged'),
-    onSingleClicked: addEventHandler(eventTarget, 'onSingleClicked'),
-    onVisibilityChanged: addEventHandler(eventTarget, 'onVisibilityChanged'),
+    onCalculated: createEventHandlerMock(),
+    onChanged: createEventHandlerMock(),
+    onColumnSorted: createEventHandlerMock(),
+    onFormatChanged: createEventHandlerMock(),
+    onFormulaChanged: createEventHandlerMock(),
+    onRowHiddenChanged: createEventHandlerMock(),
+    onRowSorted: createEventHandlerMock(),
+    onSelectionChanged: createEventHandlerMock(),
+    onSingleClicked: createEventHandlerMock(),
+    onVisibilityChanged: createEventHandlerMock(),
     ...properties
   }
 }

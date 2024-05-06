@@ -1,53 +1,26 @@
 import Workbook from '../Workbook.vue'
-import OfficeAddinMock from 'office-addin-mock'
 import Context from '@/Context'
 import { VueExcelGlobalState } from '@/state'
 import { flushPromises, mount } from '@vue/test-utils'
-import { expect, it, test, beforeEach } from 'vitest'
-import { h, nextTick } from 'vue'
-import { describe } from 'node:test'
+import { expect, it, beforeEach, describe } from 'vitest'
+import { h } from 'vue'
+import { createContextMock, createWorksheetMock, createEventHandlerMock } from './mocks'
 
-let worksheetActivatedHandler = ({}) => {}
-
-function buildMockWorksheet(id: string) {
-  return {
-    id,
-    name: `Sheet${id}`,
-    names: {}
-  }
-}
-
-const mockData = {
-  _sheetOne: buildMockWorksheet('1'),
-  _sheetTwo: buildMockWorksheet('2'),
-  workbook: {
-    name: 'Test Workbook.xlsx',
-    worksheets: {
-      sheetOne: buildMockWorksheet('1'),
-      sheetTwo: buildMockWorksheet('2'),
-      activeWorksheet: buildMockWorksheet('1'),
-      getItem(id: string) {
-        if (id == '1') return this.sheetOne
-        if (id == '2') return this.sheetTwo
-      },
-      onActivated: {
-        activatedHandler: () => {},
-        add(handler: () => void) {
-          worksheetActivatedHandler = handler
-        }
-      },
-      getActiveWorksheet() {
-        return this.activeWorksheet
-      }
+const mockContext = createContextMock({
+  worksheets: {
+    sheetOne: createWorksheetMock({ id: '1', name: 'Sheet1' }),
+    sheetTwo: createWorksheetMock({ id: '2', name: 'Sheet2' }),
+    activeWorksheet: createWorksheetMock({ id: '1', name: 'Sheet1' }),
+    getItem(id: string) {
+      if (id == '1') return this.sheetOne
+      if (id == '2') return this.sheetTwo
+    },
+    onActivated: createEventHandlerMock(),
+    getActiveWorksheet() {
+      return this.activeWorksheet
     }
   }
-}
-
-const mockContext = new OfficeAddinMock.OfficeMockObject(mockData) as any
-
-function MyComponent() {
-  return h('div', 'Hello')
-}
+})
 
 interface LocalTestContext {
   globalState: VueExcelGlobalState
@@ -93,7 +66,8 @@ it<LocalTestContext>('sets the active worksheet on the global state object', asy
 
 it<LocalTestContext>('updates activeWorksheet when the event listener is called', async ({ globalState }) => {
   await mountWorkbook({ globalState })
-  worksheetActivatedHandler({ worksheetId: '2' })
+
+  mockContext.workbook.worksheets.onActivated.fire({ worksheetId: '2' })
   await flushPromises()
   expect(globalState.activeWorksheet.value?.name).toEqual('Sheet2')
 })
@@ -135,7 +109,7 @@ describe('Advanced Routing', () => {
   it<LocalTestContext>('activates the second route on worksheet change', async ({ globalState }) => {
     const wrapper = await mountWorkbook({ globalState })
 
-    worksheetActivatedHandler({ worksheetId: '2' })
+    mockContext.workbook.worksheets.onActivated.fire({ worksheetId: '2' })
     await flushPromises()
 
     expect(wrapper.html()).toContain('<div>\n  <div>Component 2')
@@ -144,7 +118,7 @@ describe('Advanced Routing', () => {
   it<LocalTestContext>('hides the first route on worksheet change', async ({ globalState }) => {
     const wrapper = await mountWorkbook({ globalState })
 
-    worksheetActivatedHandler({ worksheetId: '2' })
+    mockContext.workbook.worksheets.onActivated.fire({ worksheetId: '2' })
     await flushPromises()
 
     expect(wrapper.html()).toContain('<div style="display: none;">\n  <div>Component 1')
