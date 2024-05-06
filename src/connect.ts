@@ -20,7 +20,7 @@ export async function connectExcel(routes: Route[] = []) {
   if (!window.Office) {
     throw 'Office could not be found! Are you sure you loaded office.js in your index.html?'
   }
-  if (!Excel) {
+  if (!window.Excel) {
     throw 'Excel could not be found!'
   }
 
@@ -28,7 +28,7 @@ export async function connectExcel(routes: Route[] = []) {
 
   return await Excel.run(async (ctx: Excel.RequestContext) => {
     return {
-      install(app: App, options: PluginOptions): void {
+      install(app: App, options: PluginOptions = {}): void {
         installComponents(app, options)
 
         const state = new VueExcelGlobalState(ctx, normalizedRoutes)

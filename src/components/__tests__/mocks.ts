@@ -32,6 +32,7 @@ export function createContextMock(properties: Record<string, any> = {}) {
         getActiveWorksheet() {
           return this.activeWorksheet
         },
+        onActivated: createEventHandlerMock(),
         ...(properties.worksheets || {})
       },
       ...(properties.workbook || {})
