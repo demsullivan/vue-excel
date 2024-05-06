@@ -1,8 +1,6 @@
-import { expect, it, vi } from 'vitest'
-import Context from '../src/Context'
-
+import { expect, it, vi, describe } from 'vitest'
 import OfficeAddinMock from 'office-addin-mock'
-import test, { describe } from 'node:test'
+import Context from '@/Context'
 
 const mockData = {
   workbook: {

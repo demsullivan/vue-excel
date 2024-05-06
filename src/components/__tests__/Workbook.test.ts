@@ -1,6 +1,7 @@
 import Workbook from '../Workbook.vue'
 import OfficeAddinMock from 'office-addin-mock'
-import { Context, VueExcelGlobalState } from '@/index'
+import Context from '@/Context'
+import { VueExcelGlobalState } from '@/state'
 import { flushPromises, mount } from '@vue/test-utils'
 import { expect, it, test, beforeEach } from 'vitest'
 import { h, nextTick } from 'vue'
@@ -85,16 +86,12 @@ it<LocalTestContext>('sets worksheets on the global state object', async ({ glob
   expect(globalState.worksheets.value).toEqual(mockContext.workbook.worksheets)
 })
 
-it<LocalTestContext>('sets the active worksheet on the global state object', async ({
-  globalState
-}) => {
+it<LocalTestContext>('sets the active worksheet on the global state object', async ({ globalState }) => {
   await mountWorkbook({ globalState })
   expect(globalState.activeWorksheet.value).toEqual(mockContext.workbook.worksheets.activeWorksheet)
 })
 
-it<LocalTestContext>('updates activeWorksheet when the event listener is called', async ({
-  globalState
-}) => {
+it<LocalTestContext>('updates activeWorksheet when the event listener is called', async ({ globalState }) => {
   await mountWorkbook({ globalState })
   worksheetActivatedHandler({ worksheetId: '2' })
   await flushPromises()
@@ -135,9 +132,7 @@ describe('Advanced Routing', () => {
     expect(wrapper.html()).toContain('<div style="display: none;">\n  <div>Component 2')
   })
 
-  it<LocalTestContext>('activates the second route on worksheet change', async ({
-    globalState
-  }) => {
+  it<LocalTestContext>('activates the second route on worksheet change', async ({ globalState }) => {
     const wrapper = await mountWorkbook({ globalState })
 
     worksheetActivatedHandler({ worksheetId: '2' })

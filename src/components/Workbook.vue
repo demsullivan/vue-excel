@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, provide, ref, shallowRef, watch } from 'vue'
-import type Context from '@/Context'
+import { inject, onMounted, ref, shallowRef, watch } from 'vue'
 import type { NormalizedRoute } from '@/types'
 import type { VueExcelGlobalState } from '..'
 
