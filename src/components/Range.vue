@@ -17,6 +17,11 @@ const binding = shallowRef<Excel.Binding>()
 watch(
   () => props.value,
   async (value, oldValue) => {
+    // TODO: detect the size of the range, and handle values accordingly.
+    // For example, if it's a single cell, use single values.
+    // If it's a column, use an array of values.
+    // If it's a row, also use an array of values.
+    // If it's two dimensional, use an array of arrays.
     if (oldValue == undefined && (value == null || value == undefined)) return
     if (!binding.value) return
 
