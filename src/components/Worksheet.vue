@@ -1,79 +1,100 @@
 <script setup lang="ts">
-import { onMounted, inject, shallowRef, provide } from 'vue'
-import type Context from '@/Context'
-import { EmitFlags } from 'typescript'
+import { onBeforeMount, onBeforeUnmount, inject, shallowRef, provide, watch, computed } from 'vue'
+import type { VueExcelGlobalState } from '@/index'
 
-// REFS AND PROPS
-const context: Context = inject('vueExcel.context') as Context
-const worksheet = shallowRef<Excel.Worksheet>()
-
-provide('vueExcel.scope.worksheet', worksheet)
-defineExpose({ worksheet })
-
+////////// TYPES //////////
 type Props = {
   name: string
 }
 
-const props = defineProps<Props>()
-
-// EMITS AND EVENTS
-
-type EmitEventMap = {
-  changed: { handler: 'onChanged'; eventArgs: Excel.WorksheetChangedEventArgs }
-  selectionChanged: {
-    handler: 'onSelectionChanged'
-    eventArgs: Excel.WorksheetSelectionChangedEventArgs
-  }
-}
-
 type Emits = {
-  changed: [event: Excel.WorksheetChangedEventArgs]
-  selectionChanged: [event: Excel.WorksheetSelectionChangedEventArgs]
+  calculated: [event: Excel.WorksheetCalculatedEventArgs, handlerName: 'onCalculated']
+  changed: [event: Excel.WorksheetChangedEventArgs, handlerName: 'onChanged']
+  columnSorted: [event: Excel.WorksheetColumnSortedEventArgs, handlerName: 'onColumnSorted']
+  formatChanged: [event: Excel.WorksheetFormatChangedEventArgs, handlerName: 'onFormatChanged']
+  formulaChanged: [event: Excel.WorksheetFormulaChangedEventArgs, handlerName: 'onFormulaChanged']
+  rowHiddenChanged: [event: Excel.WorksheetRowHiddenChangedEventArgs, handlerName: 'onRowHiddenChanged']
+  rowSorted: [event: Excel.WorksheetRowSortedEventArgs, handlerName: 'onRowSorted']
+  selectionChanged: [event: Excel.WorksheetSelectionChangedEventArgs, handlerName: 'onSelectionChanged']
+  singleClicked: [event: Excel.WorksheetSingleClickedEventArgs, handlerName: 'onSingleClicked']
+  visibilityChanged: [event: Excel.WorksheetVisibilityChangedEventArgs, handlerName: 'onVisibilityChanged']
 }
 
 type WorksheetEventHandler = {
-  [P in keyof EmitEventMap]: EmitEventMap[P]['handler']
-}[keyof EmitEventMap]
+  [P in keyof Emits]: Emits[P][1]
+}[keyof Emits]
 
 type WorksheetEventArgs = {
-  [P in keyof EmitEventMap]: EmitEventMap[P]['eventArgs']
-}[keyof EmitEventMap]
+  [P in keyof Emits]: Emits[P][0]
+}[keyof Emits]
 
+////////// REFS AND PROPS //////////
+
+const vueExcel = inject('vueExcel') as VueExcelGlobalState
+const context = vueExcel.context
+const activeWorksheet = vueExcel.activeWorksheet
+
+const worksheet = shallowRef<Excel.Worksheet>()
+const props = defineProps<Props>()
+const isActive = computed<boolean>(() => {
+  return props.name == activeWorksheet.value?.name
+})
+
+provide('vueExcel.scope.worksheet', worksheet)
+
+////////// EMITS //////////
 const emitEvents: Record<keyof Emits, WorksheetEventHandler> = {
+  calculated: 'onCalculated',
   changed: 'onChanged',
-  selectionChanged: 'onSelectionChanged'
+  columnSorted: 'onColumnSorted',
+  formatChanged: 'onFormatChanged',
+  formulaChanged: 'onFormulaChanged',
+  rowHiddenChanged: 'onRowHiddenChanged',
+  rowSorted: 'onRowSorted',
+  selectionChanged: 'onSelectionChanged',
+  singleClicked: 'onSingleClicked',
+  visibilityChanged: 'onVisibilityChanged'
 }
 
 const emit = defineEmits<Emits>()
 
-// FUNCTIONS
 async function emitEvent(emitName: keyof Emits, event: WorksheetEventArgs) {
   // @ts-ignore - TS doesn't like the dynamic emit name because of how defineEmits is typed.
-  emit(emitName, event)
+  emit(emitName, event, emitEvents[emitName])
 }
 
-function setupEventListeners() {
-  const sheet = worksheet.value
-  if (sheet == null) return
+////////// LIFECYCLE HOOKS //////////
+onBeforeMount(async () => {
+  const { xlWorksheet } = await context.fetch(async (ctx) => ({
+    xlWorksheet: ctx.workbook.worksheets.getItem(props.name)
+  }))
 
   const emitNames = Object.keys(emitEvents) as (keyof Emits)[]
 
   emitNames.forEach((emitName: keyof Emits) => {
     const eventName: WorksheetEventHandler = emitEvents[emitName]
-    sheet[eventName].add(emitEvent.bind({}, emitName))
+    xlWorksheet[eventName].add(emitEvent.bind({}, emitName))
   })
-}
 
-onMounted(async () => {
-  const { xlWorksheet } = await context.fetch(async (ctx) => ({
-    xlWorksheet: ctx.workbook.worksheets.getItem(props.name)
-  }))
+  await context.sync()
 
   worksheet.value = xlWorksheet
-  setupEventListeners()
+})
+
+onBeforeUnmount(async () => {
+  await context.run(async (ctx) => {
+    const emitNames = Object.keys(emitEvents) as (keyof Emits)[]
+
+    emitNames.forEach((emitName: keyof Emits) => {
+      const eventName: WorksheetEventHandler = emitEvents[emitName]
+      xlWorksheet[eventName].remove(emitEvent.bind({}, emitName))
+    })
+  })
 })
 </script>
 
 <template>
-  <slot></slot>
+  <div v-if="isActive">
+    <slot></slot>
+  </div>
 </template>
