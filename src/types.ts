@@ -25,3 +25,18 @@ export type Route =
   | RouteWithSheetName
   | RouteWithNamedRef
   | (Pick<NormalizedRoute, 'activated' | 'component'> & Partial<NormalizedRoute>)
+
+export enum ExcelCellValueType {
+  array = 'Array',
+  boolean = 'Boolean',
+  double = 'Double',
+  entity = 'Entity',
+  empty = 'Empty',
+  error = 'Error',
+  formattedNumber = 'FormattedNumber',
+  linkedEntity = 'LinkedEntity',
+  reference = 'Reference',
+  string = 'String',
+  notAvailable = 'NotAvailable',
+  webImage = 'WebImage'
+}
