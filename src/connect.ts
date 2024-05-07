@@ -6,6 +6,7 @@ import Workbook from '@/components/Workbook.vue'
 import Worksheet from '@/components/Worksheet.vue'
 import Range from '@/components/Range.vue'
 import Table from '@/components/Table.vue'
+import Taskpane from '@/components/Taskpane.vue'
 
 function installComponents(app: App, options: PluginOptions): void {
   const prefix = options.prefix || ''
@@ -14,6 +15,7 @@ function installComponents(app: App, options: PluginOptions): void {
     .component(`${prefix}Worksheet`, Worksheet)
     .component(`${prefix}Range`, Range)
     .component(`${prefix}Table`, Table)
+    .component(`${prefix}Taskpane`, Taskpane)
 }
 
 export async function connectExcel(routes: Route[] = []) {

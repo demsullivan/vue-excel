@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, shallowRef, watch } from 'vue'
-import type { NormalizedRoute } from '@/types'
+import { computed, inject, onMounted, ref, shallowRef, watch } from 'vue'
+import type { NormalizedRoute, RouteComponent } from '@/types'
 import type { VueExcelGlobalState } from '..'
+
+type RoutedComponentRegistry = Record<string, { component: RouteComponent; props: Record<string, any> }>
 
 const vueExcel = inject('vueExcel') as VueExcelGlobalState
 
@@ -47,28 +49,30 @@ onMounted(async () => {
   workbookNames.value = xlNames
 })
 
-watch(
-  () => vueExcel.activeWorksheet.value,
-  async (newValue) => {
-    if (!newValue) return
+const routedComponents = computed<RoutedComponentRegistry>(() => {
+  if (!vueExcel.worksheets.value) return {}
 
-    computedRoutes.value = await Promise.all(
-      routes.map(async (route: NormalizedRoute) => {
-        return {
-          isActive: newValue ? await route.activated(context, newValue) : false,
-          component: route.component
-        }
-      })
-    )
-  }
-)
+  return vueExcel.worksheets.value.items.reduce((registry: RoutedComponentRegistry, worksheet: Excel.Worksheet) => {
+    const route = routes.find((route) => route.activated(context, worksheet))
+    if (route) {
+      registry[worksheet.name] = {
+        component: route.component,
+        props: { worksheet }
+      }
+    }
+    return registry
+  }, {})
+})
 </script>
 
 <template>
   <div v-if="vueExcel.workbook">
     <slot></slot>
-  </div>
-  <div v-for="route in computedRoutes" :style="route.isActive ? null : 'display: none'">
-    <component :is="route.component" />
+    <div
+      v-for="(routedComponent, worksheet) in routedComponents"
+      :style="worksheet == vueExcel.activeWorksheet.value?.name ? null : 'display: none'"
+    >
+      <component :is="routedComponent.component" v-bind="routedComponent.props" />
+    </div>
   </div>
 </template>

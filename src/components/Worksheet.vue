@@ -87,14 +87,14 @@ onBeforeUnmount(async () => {
 
     emitNames.forEach((emitName: keyof Emits) => {
       const eventName: WorksheetEventHandler = emitEvents[emitName]
-      xlWorksheet[eventName].remove(emitEvent.bind({}, emitName))
+      if (worksheet.value) {
+        worksheet.value[eventName].remove(emitEvent.bind({}, emitName))
+      }
     })
   })
 })
 </script>
 
 <template>
-  <div v-if="isActive">
-    <slot></slot>
-  </div>
+  <slot></slot>
 </template>
