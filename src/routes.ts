@@ -1,5 +1,5 @@
-import type { NormalizedRoute, Route, RouteWithSheetName, RouteWithNamedRef } from "@/types";
-import type Context from '@/Context'
+import type { NormalizedRoute, Route, RouteWithSheetName, RouteWithNamedRef } from '@vue-excel/types'
+import type Context from '@vue-excel/Context'
 
 function routeActivationHandlerBySheetName(
   sheetName: string

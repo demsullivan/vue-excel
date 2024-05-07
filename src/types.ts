@@ -1,5 +1,5 @@
 import { type Component, type DefineComponent } from 'vue'
-import type Context from '@/Context'
+import type Context from '@vue-excel/Context'
 
 export type RouteComponent = Component | DefineComponent
 

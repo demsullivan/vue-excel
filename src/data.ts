@@ -1,5 +1,5 @@
 import moment, { type Moment } from 'moment-msdate'
-import { ExcelCellValueType } from '@/types'
+import { ExcelCellValueType } from '@vue-excel/types'
 export type TableRecord = Record<string, any>
 
 export type TableRow = {
@@ -82,7 +82,7 @@ class EmptyTransformer extends BaseTransformer {
   fromExcel(cellValue: Excel.EmptyCellValue): CellValue {
     return null
   }
-  
+
   toExcel(cellValue: null | undefined): Excel.CellValue {
     return <Excel.EmptyCellValue>{ type: this.type }
   }

@@ -25,7 +25,6 @@
   "author": "Dave Sullivan",
   "license": "MIT",
   "dependencies": {
-    "@microsoft/office-js": "^1.1.91",
     "lodash": "^4.17.21",
     "moment-msdate": "github:demsullivan/moment-msdate#ds-typedefs",
     "office-toolbox": "^0.3.0",

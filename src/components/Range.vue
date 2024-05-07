@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject, onMounted, shallowRef, watch } from 'vue'
-import type Context from '@/Context'
+import type Context from '@vue-excel/Context'
 
 // REFS AND PROPS
 type Props = {
@@ -53,11 +53,7 @@ onMounted(async () => {
     if (props.address) {
       xlBinding = ctx.workbook.bindings.add(props.address, Excel.BindingType.range, props.address)
     } else if (props.name) {
-      xlBinding = ctx.workbook.bindings.addFromNamedItem(
-        props.name,
-        Excel.BindingType.range,
-        props.name
-      )
+      xlBinding = ctx.workbook.bindings.addFromNamedItem(props.name, Excel.BindingType.range, props.name)
     } else {
       console.error('You must pass either address or name props to a Range component!')
       return { xlBinding: undefined }

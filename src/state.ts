@@ -1,6 +1,6 @@
 import { type ShallowRef, shallowRef } from 'vue'
-import Context from '@/Context'
-import { type NormalizedRoute } from '@/types'
+import Context from '@vue-excel/Context'
+import { type NormalizedRoute } from '@vue-excel/types'
 
 export class VueExcelGlobalState {
   context: Context

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { type ShallowRef, inject, shallowRef, watch, ref } from 'vue'
-import type Context from '@/Context'
+import type Context from '@vue-excel/Context'
 
 export type TableRowRecord = Record<string, any>
 
@@ -44,9 +44,7 @@ async function updateTable(overwrite: boolean) {
     if (table.value) {
       excelTable = table.value
     } else {
-      excelTable = props.name
-        ? worksheet.value.tables.getItem(props.name)
-        : worksheet?.value.tables.getItemAt(0)
+      excelTable = props.name ? worksheet.value.tables.getItem(props.name) : worksheet?.value.tables.getItemAt(0)
       excelTable.load('name')
       await ctx.sync()
     }
@@ -140,20 +138,8 @@ type GetRecordArgs = {
 async function getTableRow({ id }: { id: any }): Promise<TableRow | null>
 async function getTableRow({ row }: { row: number }): Promise<TableRow | null>
 async function getTableRow({ range }: { range: Excel.Range }): Promise<TableRow | null>
-async function getTableRow({
-  field,
-  value
-}: {
-  field: string
-  value: any
-}): Promise<TableRow | null>
-async function getTableRow({
-  id,
-  row,
-  field,
-  value,
-  range
-}: GetRecordArgs): Promise<TableRow | null> {
+async function getTableRow({ field, value }: { field: string; value: any }): Promise<TableRow | null>
+async function getTableRow({ id, row, field, value, range }: GetRecordArgs): Promise<TableRow | null> {
   let rowValues: any[] = []
 
   if (!headers?.value) return null
@@ -208,20 +194,8 @@ type UpdateRowArgs = {
   tableRow?: TableRow
 }
 
-async function updateTableRow({
-  id,
-  record
-}: {
-  id: string | number
-  record: Record<string, any>
-}): Promise<void>
-async function updateTableRow({
-  row,
-  record
-}: {
-  row: number
-  record: Record<string, any>
-}): Promise<void>
+async function updateTableRow({ id, record }: { id: string | number; record: Record<string, any> }): Promise<void>
+async function updateTableRow({ row, record }: { row: number; record: Record<string, any> }): Promise<void>
 async function updateTableRow({
   field,
   value,

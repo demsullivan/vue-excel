@@ -1,7 +1,7 @@
 import { expect, it, describe, vi, beforeEach } from 'vitest'
 import moment from 'moment-msdate'
-import { ExcelCellValueType } from '@/types'
-import { cellToExcel, cellFromExcel, FormattedNumber } from '@/data'
+import { ExcelCellValueType } from '@vue-excel/types'
+import { cellToExcel, cellFromExcel, FormattedNumber } from '@vue-excel/data'
 
 describe('from excel', () => {
   it('converts a string', () => {
