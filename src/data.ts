@@ -1,5 +1,5 @@
 import moment, { type Moment } from 'moment-msdate'
-import { ExcelCellValueType } from '@vue-excel/types'
+import { ExcelCellValueType } from 'vue-excel/types'
 export type TableRecord = Record<string, any>
 
 export type TableRow = {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, onMounted, ref, shallowRef, watch } from 'vue'
-import type { NormalizedRoute, RouteComponent } from '@vue-excel/types'
+import type { NormalizedRoute, RouteComponent } from 'vue-excel/types'
 import type { VueExcelGlobalState } from '..'
 
 type RoutedComponentRegistry = Record<string, { component: RouteComponent; props: Record<string, any> }>

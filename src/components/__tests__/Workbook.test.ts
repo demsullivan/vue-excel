@@ -1,6 +1,6 @@
 import Workbook from '../Workbook.vue'
-import Context from '@vue-excel/Context'
-import { VueExcelGlobalState } from '@vue-excel/state'
+import Context from 'vue-excel/Context'
+import { VueExcelGlobalState } from 'vue-excel/state'
 import { flushPromises, mount } from '@vue/test-utils'
 import { expect, it, beforeEach, describe } from 'vitest'
 import { h } from 'vue'

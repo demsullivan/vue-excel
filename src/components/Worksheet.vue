@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeMount, onBeforeUnmount, inject, shallowRef, provide, watch, computed } from 'vue'
-import type { VueExcelGlobalState } from '@vue-excel/index'
+import type { VueExcelGlobalState } from 'vue-excel/index'
 
 ////////// TYPES //////////
 type Props = {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject, onMounted, shallowRef, watch } from 'vue'
-import type Context from '@vue-excel/Context'
+import type Context from 'vue-excel/Context'
 
 // REFS AND PROPS
 type Props = {

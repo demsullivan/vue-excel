@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject, computed, type ShallowRef } from 'vue'
-import { type VueExcelGlobalState } from '@vue-excel/state'
+import { type VueExcelGlobalState } from 'vue-excel/state'
 
 const vueExcel = inject('vueExcel') as VueExcelGlobalState
 const worksheet = inject('vueExcel.scope.worksheet') as ShallowRef<Excel.Worksheet>

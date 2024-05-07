@@ -8,7 +8,7 @@
 
     "baseUrl": ".",
     "paths": {
-      "@vue-excel/*": ["./src/*"]
+      "vue-excel/*": ["./src/*"]
     }
   }
 }

@@ -1,9 +1,9 @@
 import { expect, it, beforeEach, vi, describe } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
-import { connectExcel } from '@vue-excel/index'
-import type { RouteComponent } from '@vue-excel/types'
+import { connectExcel } from 'vue-excel/index'
+import type { RouteComponent } from 'vue-excel/types'
 import { defineComponent, inject, nextTick } from 'vue'
-import { createContextMock } from '@vue-excel/components/__tests__/mocks'
+import { createContextMock } from 'vue-excel/components/__tests__/mocks'
 
 let vueExcel: any
 

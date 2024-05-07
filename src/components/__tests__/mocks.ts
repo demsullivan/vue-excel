@@ -39,6 +39,8 @@ export function createContextMock(properties: Record<string, any> = {}) {
     }
   }
 
+  mockData.workbook.worksheets.items = [mockData.workbook.worksheets.activeWorksheet]
+
   return new OfficeAddinMock.OfficeMockObject(mockData) as any
 }
 
