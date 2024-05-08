@@ -4,7 +4,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: 'Vue Excel',
   description: 'A vue plugin for building modern, reactive Excel Add-ins',
-  base: process.env.CI ? '/vue-excel/' : '',
+  base: '/vue-excel/',
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
