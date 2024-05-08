@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { type ShallowRef, inject, shallowRef, watch, ref } from 'vue'
 import type Context from '../Context'
-import type { VueExcelGlobalState } from 'src/state'
+import type { VueExcelGlobalState } from '../state'
 
 export type TableRowRecord = Record<string, any>
 

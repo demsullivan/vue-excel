@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject, onMounted, shallowRef, watch } from 'vue'
-import type { VueExcelGlobalState } from 'src/state'
+import type { VueExcelGlobalState } from '../state'
 
 // REFS AND PROPS
 type Props = {
