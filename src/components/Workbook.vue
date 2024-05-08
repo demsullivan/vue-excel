@@ -30,7 +30,7 @@ async function worksheetActivated(event: Excel.WorksheetActivatedEventArgs) {
 onMounted(async () => {
   const { xlWorkbook, xlWorksheets, xlNames, xlActiveWorksheet } = await context.fetch(
     async (ctx: Excel.RequestContext) => {
-      const xlWorksheets = ctx.workbook.worksheets.load('items')
+      const xlWorksheets = ctx.workbook.worksheets
 
       xlWorksheets.onActivated.add(worksheetActivated)
 
