@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { type ShallowRef, inject, shallowRef, watch, ref } from 'vue'
 import type Context from '../Context'
+import type { VueExcelGlobalState } from 'src/state'
 
 export type TableRowRecord = Record<string, any>
 
@@ -29,7 +30,9 @@ type Emits = {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-const context = inject('vueExcel.context') as Context
+const vueExcel = inject('vueExcel') as VueExcelGlobalState
+const context = vueExcel.context
+
 const worksheet = inject<ShallowRef<Excel.Worksheet>>('vueExcel.scope.worksheet')
 const table = shallowRef<Excel.Table>()
 const headerRange = shallowRef<Excel.Range>()

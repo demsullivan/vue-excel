@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject, onMounted, shallowRef, watch } from 'vue'
-import type Context from '../Context'
+import type { VueExcelGlobalState } from 'src/state'
 
 // REFS AND PROPS
 type Props = {
@@ -11,7 +11,9 @@ type Props = {
 
 const props = defineProps<Props>()
 
-const context: Context = inject('vueExcel.context') as Context
+const vueExcel = inject('vueExcel') as VueExcelGlobalState
+const context = vueExcel.context
+
 const binding = shallowRef<Excel.Binding>()
 
 watch(
