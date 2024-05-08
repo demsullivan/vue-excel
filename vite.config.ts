@@ -21,10 +21,5 @@ export default defineConfig({
         }
       }
     }
-  },
-  resolve: {
-    alias: {
-      'vue-excel': fileURLToPath(new URL('./src', import.meta.url))
-    }
   }
 })

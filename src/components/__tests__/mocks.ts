@@ -1,4 +1,3 @@
-import { add } from 'lodash'
 import OfficeAddinMock from 'office-addin-mock'
 
 type EventHandlerMock = {

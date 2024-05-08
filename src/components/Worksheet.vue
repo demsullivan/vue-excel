@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeMount, onBeforeUnmount, inject, shallowRef, provide, watch, computed } from 'vue'
-import type { VueExcelGlobalState } from 'vue-excel/index'
+import type { VueExcelGlobalState } from '../state'
 
 ////////// TYPES //////////
 type Props = {
@@ -65,7 +65,7 @@ async function emitEvent(emitName: keyof Emits, event: WorksheetEventArgs) {
 
 ////////// LIFECYCLE HOOKS //////////
 onBeforeMount(async () => {
-  const { xlWorksheet } = await context.fetch(async (ctx) => ({
+  const { xlWorksheet } = await context.fetch(async (ctx: Excel.RequestContext) => ({
     xlWorksheet: ctx.workbook.worksheets.getItem(props.name)
   }))
 
@@ -82,7 +82,7 @@ onBeforeMount(async () => {
 })
 
 onBeforeUnmount(async () => {
-  await context.run(async (ctx) => {
+  await context.run(async (ctx: Excel.RequestContext) => {
     const emitNames = Object.keys(emitEvents) as (keyof Emits)[]
 
     emitNames.forEach((emitName: keyof Emits) => {

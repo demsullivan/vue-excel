@@ -1,6 +1,6 @@
 import { expect, it, vi, describe } from 'vitest'
-import Context from 'vue-excel/Context'
-import { createContextMock } from 'vue-excel/components/__tests__/mocks'
+import Context from '../Context'
+import { createContextMock } from '../components/__tests__/mocks'
 
 const contextMock = createContextMock({
   workbook: {

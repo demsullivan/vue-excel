@@ -1,4 +1,4 @@
-import Worksheet from 'vue-excel/components/Worksheet.vue'
+import Worksheet from '../Worksheet.vue'
 import { mount, flushPromises } from '@vue/test-utils'
 import { expect, beforeEach } from 'vitest'
 import { type GlobalStateFixture, composeTestWithState } from './utils'
