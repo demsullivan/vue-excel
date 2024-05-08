@@ -13,11 +13,11 @@ export type NormalizedRoute = {
   props: string[]
 }
 
-export type RouteWithSheetName = { sheetName: string; component: DefineComponent; props?: string[] }
+export type RouteWithSheetName = { sheetName: string; component: RouteComponent; props?: string[] }
 export type RouteWithNamedRef = {
   namedRef: string
   value: string
-  component: DefineComponent
+  component: RouteComponent
   props?: string[]
 }
 

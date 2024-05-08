@@ -26,7 +26,7 @@
   "license": "MIT",
   "dependencies": {
     "lodash": "^4.17.21",
-    "moment-msdate": "github:demsullivan/moment-msdate#ds-typedefs",
+    "moment-msdate": "github:demsullivan/moment-msdate#ds-custom-fixes",
     "office-toolbox": "^0.3.0",
     "vue": "^3.4.21"
   },
