@@ -26,18 +26,20 @@ export default class Context {
   async fetch<T extends FetchBatch>(
     createBatch: (ctx: Excel.RequestContext) => Promise<T>
   ): Promise<T> {
-    const batch = await createBatch(this.context)
+    return await navigator.locks.request('vueExcel.context', async () => {
+      const batch = await createBatch(this.context)
 
-    // TODO: don't load if already loaded
-    Object.keys(batch).forEach((key) => {
-      if (batch[key]) {
-        batch[key]?.load()
-      }
+      // TODO: don't load if already loaded
+      Object.keys(batch).forEach((key) => {
+        if (batch[key]) {
+          (batch[key] as any).load()
+        }
+      })
+  
+      await this.context.sync()
+  
+      return batch
     })
-
-    await this.context.sync()
-
-    return batch
   }
 
   async run(operation: (ctx: Excel.RequestContext) => Promise<void>): Promise<void> {
